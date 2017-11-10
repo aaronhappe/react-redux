@@ -5,89 +5,8 @@ import { createStore, combineReducers } from 'redux'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Component } from 'react'
-
-class todosAction {
-	constructor(type,id,text,completed){
-		this.type = type
-		this.text = text
-		this.id = id
-		this.completed = completed
-	}
-	addTodo (type, id, text){
-		return (
-			{
-				type: type,
-				id: id,
-				text: text,
-				completed: false
-			}
-		)
-	}
-	toggleTodo (type, id) {
-		return (
-			{
-				type: type,
-				id: id
-			}
-		)
-	}
-}
-
-const addTodoObj = new todosAction()
-console.log('t')
-
-const todo = (state, action) => {
-	switch (action.type) {
-		case 'ADD_TODO':
-		  return {
-		 		id: action.id,
-		 		text: action.text,
-		 		completed: false
-			}
-		case 'TOGGLE_TODO':
-		console.log(state)
-			if(state.id !== action.id) {
-		 		return state
-			}
-			return {
-				...state,
-				completed: !state.completed
-			}
-		default: 
-			return state
-	}
-}
-
-const todos = (state = [], action) => {
-	switch(action.type) {
-		case 'ADD_TODO':
-			return [
-				...state,
-				todo(undefined, action)
-			]
-		case 'TOGGLE_TODO':
-			return state.map(t => todo(t, action))
-			default:
-				return state;
-	}
-}
-
-const visibilityFilter = (
-	state = 'SHOW_ALL',
-	action 
-	) => {
-		switch(action.type) {
-			case 'SET_VISIBILITY_FILTER':
-				return action.filter
-			default:
-				return state
-		}
-}
-
-const todoApp = combineReducers({
-	todos,
-	visibilityFilter
-})
+import Reducer from './reducers/index'
+import { actionTodoDispatch } from './actions/index'
 
 const FilterLink = ({
 	filter,
@@ -128,13 +47,35 @@ const getVisibileTodos = (
 	}
 }
 
-const store = createStore(todoApp)
+const store = createStore(Reducer)
 
 let nextTodoId = 0
 
 const ADD_TODO = ''
 
+class AddTodoView extends Component {
+	constructor(props){
+		super(props)
+	}
+	render(){
+		return(
+			<div>
+				<input ref={node => {
+					this.input = node
+				}}/>
+				<button onClick = { () => {
+					{actionTodoDispatch.addTodo(nextTodoId++, this.input.value)}
+					{this.props.subscribe()}
+				}}>wa??</button>
+			</div>
+		)
+	}
+}
+
 class TodoApp extends Component {
+	constructor(props) {
+		super(props)
+	}
 	
 	render() {
 		const {
@@ -148,17 +89,7 @@ class TodoApp extends Component {
 		)
 		return (
 			<div>
-			<input ref={node => {
-				this.input = node
-			}}/>
-			  <p>fefe</p>
-				<button onClick = { () => {
-					{ADD_TODO = addTodoObj.addTodo('ADD_TODO', nextTodoId, 'input and stuff')}
-					store.dispatch(
-						ADD_TODO
-					)
-					this.input.value = ''
-				}}>Add Todo</button>
+				<AddTodoView subscribe={this.props.subscribe} />
 				<ul>
 				{
 				visibleTodos.map( todo =>
@@ -204,11 +135,15 @@ class TodoApp extends Component {
 
 const render = () => {
 	ReactDOM.render(
-		<TodoApp {...store.getState()}/>,
+		<TodoApp {...store.getState()} subscribe={subScribeFunc}/>,
 		document.getElementById('root')
 	)
 	console.log(store.getState())
 }
 
-store.subscribe(render)
+const subScribeFunc = () => {
+	store.subscribe(render)
+	console.log('has been subscribed')
+}
+
 render()
